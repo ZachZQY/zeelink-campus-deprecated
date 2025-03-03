@@ -29,7 +29,7 @@ export async function sendSMS(params: SendSMSParams): Promise<SendResult> {
 
 
     const mobileStr = Array.isArray(mobile) ? mobile.join(',') : mobile
-
+    console.log(mobileStr, content)
 
     // 模拟发送成功
     return {
@@ -76,6 +76,31 @@ export async function sendSMS(params: SendSMSParams): Promise<SendResult> {
     //         message: error instanceof Error ? error.message : '发送短信失败'
     //     }
     // }
+}
+
+/**
+ * 发送短信验证码
+ * @param params 发送参数
+ */
+export async function sendSmsCode(params: {
+    mobile: string;
+    templateId: string;
+    params: {
+        code: string;
+        expireMinutes: string;
+    }
+}): Promise<SendResult> {
+    const { mobile, templateId, params: smsParams } = params;
+    
+    // 构建短信内容（实际应用中会根据模板ID调用相应模板）
+    // 这里简化处理，直接拼接内容
+    const content = `您的验证码是：${smsParams.code}，${smsParams.expireMinutes}分钟内有效，请勿泄露给他人。`;
+    
+    // 调用发送短信的基础函数
+    return await sendSMS({
+        mobile,
+        content
+    });
 }
 
 /**

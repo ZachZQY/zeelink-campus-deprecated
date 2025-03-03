@@ -17,6 +17,12 @@ export default {
       relationNameInCurrentTable: 'posts',
       relationNameInTargetTable: 'site',
       description: '站点的帖子列表'
+    }, {
+      targetTable: 'user',
+      type: 'ONE_TO_MANY',
+      relationNameInCurrentTable: 'current_users',
+      relationNameInTargetTable: 'current_site',
+      description: '站点的用户列表'
     }
   ]
 };

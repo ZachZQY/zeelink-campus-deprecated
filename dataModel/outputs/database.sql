@@ -1,6 +1,6 @@
 -- ======================================
 -- 数据库结构SQL脚本
--- 生成时间: 2025-03-02T19:28:45.521Z
+-- 生成时间: 2025-03-03T13:51:15.907Z
 -- 生成工具: ZCM自动生成
 -- 注意: 此文件是自动生成的，请勿手动修改
 -- ======================================
@@ -80,6 +80,8 @@ CREATE TABLE IF NOT EXISTS user (
   mobile TEXT -- 手机号码,
   password TEXT -- 密码（md5加密存储）,
   nickname TEXT -- 昵称,
+  bio TEXT -- 简介,
+  avatar_url TEXT -- 头像url,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 创建时间,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 更新时间
 );
@@ -90,8 +92,25 @@ COMMENT ON COLUMN user.id IS '唯一标识符';
 COMMENT ON COLUMN user.mobile IS '手机号码';
 COMMENT ON COLUMN user.password IS '密码（md5加密存储）';
 COMMENT ON COLUMN user.nickname IS '昵称';
+COMMENT ON COLUMN user.bio IS '简介';
+COMMENT ON COLUMN user.avatar_url IS '头像url';
 COMMENT ON COLUMN user.created_at IS '创建时间';
 COMMENT ON COLUMN user.updated_at IS '更新时间';
+
+-- 用户角色表
+CREATE TABLE IF NOT EXISTS user_role (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT -- 角色名称：admin｜user,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 创建时间,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 更新时间
+);
+
+-- 添加表注释
+COMMENT ON TABLE user_role IS '用户角色表';
+COMMENT ON COLUMN user_role.id IS '唯一标识符';
+COMMENT ON COLUMN user_role.name IS '角色名称：admin｜user';
+COMMENT ON COLUMN user_role.created_at IS '创建时间';
+COMMENT ON COLUMN user_role.updated_at IS '更新时间';
 
 -- 为post_topics表添加外键字段post_posts，引用posts表
 ALTER TABLE post_topics ADD COLUMN IF NOT EXISTS post_posts BIGINT;
@@ -103,6 +122,11 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS site_site BIGINT;
 COMMENT ON COLUMN posts.site_site IS '外键：引用 site 表';
 ALTER TABLE posts ADD CONSTRAINT fk_posts_site_site FOREIGN KEY (site_site) REFERENCES site(id) ON DELETE SET NULL;
 
+-- 为user表添加外键字段current_site_site，引用site表
+ALTER TABLE user ADD COLUMN IF NOT EXISTS current_site_site BIGINT;
+COMMENT ON COLUMN user.current_site_site IS '外键：引用 site 表';
+ALTER TABLE user ADD CONSTRAINT fk_user_current_site_site FOREIGN KEY (current_site_site) REFERENCES site(id) ON DELETE SET NULL;
+
 -- 为post_topics表添加外键字段topic_topics，引用topics表
 ALTER TABLE post_topics ADD COLUMN IF NOT EXISTS topic_topics BIGINT;
 COMMENT ON COLUMN post_topics.topic_topics IS '外键：引用 topics 表';
@@ -112,6 +136,11 @@ ALTER TABLE post_topics ADD CONSTRAINT fk_post_topics_topic_topics FOREIGN KEY (
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS author_user BIGINT;
 COMMENT ON COLUMN posts.author_user IS '外键：引用 user 表';
 ALTER TABLE posts ADD CONSTRAINT fk_posts_author_user FOREIGN KEY (author_user) REFERENCES user(id) ON DELETE SET NULL;
+
+-- 为user_role表添加外键字段user_user，引用user表
+ALTER TABLE user_role ADD COLUMN IF NOT EXISTS user_user BIGINT;
+COMMENT ON COLUMN user_role.user_user IS '外键：引用 user 表';
+ALTER TABLE user_role ADD CONSTRAINT fk_user_role_user_user FOREIGN KEY (user_user) REFERENCES user(id) ON DELETE SET NULL;
 
 -- 为post_topics表的updated_at字段创建索引
 CREATE INDEX IF NOT EXISTS idx_post_topics_updated_at
@@ -153,6 +182,14 @@ ON user (updated_at);
 CREATE INDEX IF NOT EXISTS idx_user_created_at
 ON user (created_at);
 
+-- 为user_role表的updated_at字段创建索引
+CREATE INDEX IF NOT EXISTS idx_user_role_updated_at
+ON user_role (updated_at);
+
+-- 为user_role表的created_at字段创建索引
+CREATE INDEX IF NOT EXISTS idx_user_role_created_at
+ON user_role (created_at);
+
 CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -188,6 +225,12 @@ EXECUTE FUNCTION update_timestamp();
 DROP TRIGGER IF EXISTS trg_user_update_timestamp ON user;
 CREATE TRIGGER trg_user_update_timestamp
 BEFORE UPDATE ON user
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+
+DROP TRIGGER IF EXISTS trg_user_role_update_timestamp ON user_role;
+CREATE TRIGGER trg_user_role_update_timestamp
+BEFORE UPDATE ON user_role
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 

@@ -1,7 +1,7 @@
 /**
  * 数据库表对应的TypeScript类型定义
  * 注意：此文件由生成器自动生成，请勿手动修改
- * 生成时间：2025-03-02T19:28:46.542Z
+ * 生成时间：2025-03-03T13:51:17.041Z
  */
 
 // 通用类型定义 - SQL类型映射
@@ -93,6 +93,8 @@ export interface Site {
   // 关联关系
   /** 站点的帖子列表 */
   posts?: Posts[];
+  /** 站点的用户列表 */
+  current_users?: User[];
 }
 
 
@@ -125,6 +127,10 @@ export interface User {
   password?: TEXT | null;
   /** 昵称 */
   nickname?: TEXT | null;
+  /** 简介 */
+  bio?: TEXT | null;
+  /** 头像url */
+  avatar_url?: TEXT | null;
   /** 唯一标识符 */
   id?: ID;
   /** 创建时间 */
@@ -133,13 +139,42 @@ export interface User {
   updated_at?: TIMESTAMPTZ;
 
   // 关联关系
+  /** 外键：关联到 site 表 */
+  current_site_site?: ForeignKey;
+
   /** 用户发布的帖子 */
   posts?: Posts[];
+  /** 用户拥有的角色 */
+  roles?: UserRole[];
+  /** 引用自 site 表 */
+  current_site?: Site | null;
+}
+
+
+/**
+ * 用户角色表
+ */
+export interface UserRole {
+  /** 角色名称：admin｜user */
+  name?: TEXT | null;
+  /** 唯一标识符 */
+  id?: ID;
+  /** 创建时间 */
+  created_at?: TIMESTAMPTZ;
+  /** 更新时间 */
+  updated_at?: TIMESTAMPTZ;
+
+  // 关联关系
+  /** 外键：关联到 user 表 */
+  user_user?: ForeignKey;
+
+  /** 引用自 user 表 */
+  user?: User | null;
 }
 
 
 // 导出类型
-export type TableNames = 'post_topics' | 'posts' | 'site' | 'topics' | 'user';
+export type TableNames = 'post_topics' | 'posts' | 'site' | 'topics' | 'user' | 'user_role';
 
 /**
  * 获取指定表的类型
@@ -152,4 +187,5 @@ export type TableType<T extends TableNames> =
   T extends 'site' ? Site :
   T extends 'topics' ? Topics :
   T extends 'user' ? User :
+  T extends 'user_role' ? UserRole :
   never;

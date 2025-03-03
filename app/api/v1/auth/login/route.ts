@@ -5,7 +5,7 @@ import {
   createUnauthorizedResponse 
 } from '@/lib/utils/response';
 import { ErrorCode } from '@/lib/types/api';
-import { UserService } from '@/lib/services/user';
+import { loginWithCode, loginWithPassword } from '@/lib/services/auth';
 
 /**
  * 用户登录接口 - 支持密码登录和验证码登录
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // 调用服务层的验证码登录方法
+      // 调用验证码登录方法
       try {
-        const result = await UserService.loginWithCode({ mobile, code });
+        const result = await loginWithCode(mobile, code);
         
         // 成功返回用户信息和token
         return createSuccessResponse({
@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // 调用服务层的密码登录方法
+      // 调用密码登录方法
       try {
-        const result = await UserService.loginWithPassword({ mobile, password });
+        const result = await loginWithPassword(mobile, password);
         
         // 成功返回用户信息和token
         return createSuccessResponse({

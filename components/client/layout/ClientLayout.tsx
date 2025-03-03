@@ -103,29 +103,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           </ListItemButton>
         </ListItem>
         
-        {!isLoggedIn && (
-          <>
-            <Divider sx={{ my: 1 }} />
-            <ListItem disablePadding>
-              <ListItemButton 
-                component={Link} 
-                href="/client/login"
-                onClick={() => setMobileOpen(false)}
-              >
-                <ListItemText primary="登录" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton 
-                component={Link} 
-                href="/client/register"
-                onClick={() => setMobileOpen(false)}
-              >
-                <ListItemText primary="注册" />
-              </ListItemButton>
-            </ListItem>
-          </>
-        )}
+        {/* 登录注册菜单已移除 */}
         
         {isLoggedIn && (
           <>
@@ -264,87 +242,62 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
               </Button>
             </Box>
 
-            {/* 用户菜单/登录按钮 */}
-            <Box sx={{ flexGrow: 0 }}>
-              {isLoggedIn ? (
-                <Box sx={{ ml: 'auto' }}>
-                  <IconButton 
-                    component={Link}
-                    href="/client/notifications"
-                    sx={{ mr: 2 }}
-                  >
-                    <Badge badgeContent={4} color="error">
-                      📬
-                    </Badge>
-                  </IconButton>
-                  <IconButton 
-                    onClick={handleOpenUserMenu}
-                    aria-controls={Boolean(anchorElUser) ? 'user-menu' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={Boolean(anchorElUser) ? 'true' : undefined}
-                  >
-                    <Avatar 
-                      alt="用户头像" 
-                      src="/avatars/default.jpg"
-                      sx={{ width: 32, height: 32 }}
-                    />
-                  </IconButton>
-                  <Menu
-                    id="user-menu"
-                    anchorEl={anchorElUser}
-                    open={Boolean(anchorElUser)}
-                    onClose={handleCloseUserMenu}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                  >
-                    <MenuItem 
-                      component={Link} 
-                      href="/client/profile"
-                      onClick={handleCloseUserMenu}
-                    >
-                      个人资料
-                    </MenuItem>
-                    <MenuItem 
-                      component={Link} 
-                      href="/client/my-posts"
-                      onClick={handleCloseUserMenu}
-                    >
-                      我的内容
-                    </MenuItem>
-                    <MenuItem 
-                      component={Link} 
-                      href="/client/favorites"
-                      onClick={handleCloseUserMenu}
-                    >
-                      我的收藏
-                    </MenuItem>
-                    <Divider />
-                    <MenuItem onClick={handleCloseUserMenu}>
-                      退出登录
-                    </MenuItem>
-                  </Menu>
-                </Box>
-              ) : (
-                <Box sx={{ ml: 'auto' }}>
-                  <Button 
+            {/* 用户菜单或登录/注册按钮 */}
+            {isLoggedIn ? (
+              <Box sx={{ ml: 'auto' }}>
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Badge color="error" variant="dot" invisible={true}>
+                    <Avatar alt="用户头像" src="/images/avatar-placeholder.png" />
+                  </Badge>
+                </IconButton>
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem 
                     component={Link} 
-                    href="/client/login"
-                    variant="outlined" 
-                    sx={{ mr: 1 }}
+                    href="/client/profile"
+                    onClick={handleCloseUserMenu}
                   >
-                    登录
-                  </Button>
-                  <Button 
+                    个人资料
+                  </MenuItem>
+                  <MenuItem 
                     component={Link} 
-                    href="/client/register"
-                    variant="contained" 
-                    color="primary"
+                    href="/client/my-posts"
+                    onClick={handleCloseUserMenu}
                   >
-                    注册
-                  </Button>
-                </Box>
-              )}
-            </Box>
+                    我的内容
+                  </MenuItem>
+                  <MenuItem 
+                    component={Link} 
+                    href="/client/favorites"
+                    onClick={handleCloseUserMenu}
+                  >
+                    我的收藏
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleCloseUserMenu}>
+                    退出登录
+                  </MenuItem>
+                </Menu>
+              </Box>
+            ) : (
+              <Box sx={{ ml: 'auto' }}>
+                {/* 登录注册按钮已移除 */}
+              </Box>
+            )}
           </Toolbar>
         </Container>
       </AppBar>

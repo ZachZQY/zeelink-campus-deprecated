@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -18,7 +18,8 @@ import {
   InputLabel,
   OutlinedInput,
   Link as MuiLink,
-  Alert
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -106,6 +107,9 @@ export default function LoginPage() {
     sendingCode: false,
   });
   
+  // 系统通知
+  const [notification, setNotification] = useState<{ type: 'success' | 'info' | 'warning' | 'error'; title: string; message: string } | null>(null);
+  
   // 处理选项卡切换
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -117,6 +121,7 @@ export default function LoginPage() {
       code: '',
       general: '',
     });
+    setNotification(null);
   };
   
   // 处理密码可见性切换
@@ -136,6 +141,7 @@ export default function LoginPage() {
     } else if (prop === 'password') {
       setErrors({ ...errors, password: '', general: '' });
     }
+    setNotification(null);
   };
   
   // 处理验证码登录输入变化
@@ -147,6 +153,7 @@ export default function LoginPage() {
     } else if (prop === 'code') {
       setErrors({ ...errors, code: '', general: '' });
     }
+    setNotification(null);
   };
   
   // 发送验证码
@@ -185,8 +192,17 @@ export default function LoginPage() {
         throw new Error(data.message || '发送验证码失败');
       }
       
-      // 成功发送
-      console.log('验证码发送成功');
+      // 成功发送，显示通知
+      setNotification({
+        type: 'success',
+        title: '验证码已发送',
+        message: data.message || '验证码已发送到您的手机，首次登录将自动注册账号'
+      });
+      
+      // 如果在开发环境有返回验证码，自动填充
+      if (data.data?.code) {
+        setCodeLogin({ ...codeLogin, code: data.data.code });
+      }
     } catch (error) {
       console.error('发送验证码错误:', error);
       setErrors({
@@ -202,7 +218,7 @@ export default function LoginPage() {
   const handlePasswordLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    // 清除错误
+    // 清除错误和通知
     setErrors({
       passwordMobile: '',
       password: '',
@@ -210,6 +226,7 @@ export default function LoginPage() {
       code: '',
       general: '',
     });
+    setNotification(null);
     
     // 验证
     let hasError = false;
@@ -243,8 +260,8 @@ export default function LoginPage() {
     try {
       setLoading({ ...loading, passwordLogin: true });
       
-      // 调用密码登录API
-      const response = await fetch('/api/v1/auth/loginWithPassword', {
+      // 调用登录API
+      const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -252,6 +269,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           mobile: passwordLogin.mobile,
           password: passwordLogin.password,
+          loginType: 'password'
         }),
       });
       
@@ -262,7 +280,8 @@ export default function LoginPage() {
       }
       
       // 登录成功，保存token并跳转
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
       router.push('/');
     } catch (error) {
       console.error('登录错误:', error);
@@ -279,7 +298,7 @@ export default function LoginPage() {
   const handleCodeLoginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    // 清除错误
+    // 清除错误和通知
     setErrors({
       passwordMobile: '',
       password: '',
@@ -287,6 +306,7 @@ export default function LoginPage() {
       code: '',
       general: '',
     });
+    setNotification(null);
     
     // 验证
     let hasError = false;
@@ -320,15 +340,35 @@ export default function LoginPage() {
     try {
       setLoading({ ...loading, codeLogin: true });
       
-      // 调用验证码登录API
-      // 这里假设有一个验证码登录API
-      // 实际项目中替换为真实API调用
-      console.log('验证码登录', codeLogin);
+      // 调用登录API
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mobile: codeLogin.mobile,
+          code: codeLogin.code,
+          loginType: 'code'
+        }),
+      });
       
-      // 登录成功，模拟跳转（实际项目中替换为真实API调用后的跳转）
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || '登录失败');
+      }
+      
+      // 登录成功，保存token并跳转
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      
+      // 如果是新用户，设置欢迎通知
+      if (data.data.user.isNewUser) {
+        localStorage.setItem('newUserWelcome', 'true');
+      }
+      
+      router.push('/');
     } catch (error) {
       console.error('登录错误:', error);
       setErrors({
@@ -339,6 +379,18 @@ export default function LoginPage() {
       setLoading({ ...loading, codeLogin: false });
     }
   };
+  
+  // 显示新用户提示信息
+  useEffect(() => {
+    // 设置初始通知，提示用户可以使用验证码登录并自动注册
+    if (tabValue === 1) {
+      setNotification({
+        type: 'info',
+        title: '温馨提示',
+        message: '使用手机号验证码登录，首次登录将自动注册账号'
+      });
+    }
+  }, [tabValue]);
   
   return (
     <Container maxWidth="sm" sx={{ pt: 8, pb: 4 }}>
@@ -354,6 +406,13 @@ export default function LoginPage() {
         {errors.general && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {errors.general}
+          </Alert>
+        )}
+        
+        {notification && (
+          <Alert severity={notification.type} sx={{ mb: 3 }}>
+            <AlertTitle>{notification.title}</AlertTitle>
+            {notification.message}
           </Alert>
         )}
         
@@ -494,14 +553,9 @@ export default function LoginPage() {
         </Divider>
         
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="body2" display="inline">
-            还没有账号? 
+          <Typography variant="body2">
+            没有账号? 使用验证码登录自动注册
           </Typography>
-          <Link href="/register" passHref>
-            <MuiLink variant="body2" sx={{ ml: 1 }}>
-              立即注册
-            </MuiLink>
-          </Link>
         </Box>
       </Paper>
     </Container>
