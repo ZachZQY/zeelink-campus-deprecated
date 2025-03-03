@@ -10,14 +10,16 @@
     "lint": "next lint",
     "generate:sql": "npx tsx dataModel/generate-postgre-sql.ts",
     "generate:types": "npx tsx dataModel/generate-types.ts",
-    "generate":"npm run generate:sql && npm run generate:types"
+    "generate": "npm run generate:sql && npm run generate:types"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.6",
     "ezcloudbase": "^2.2.8",
+    "fast-xml-parser": "^5.0.8",
     "next": "15.2.0",
+    "qiniu": "^7.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
