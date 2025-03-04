@@ -7,7 +7,7 @@ import { ApiResponse, ErrorCode } from '../types/api';
  * @param message 成功消息
  * @returns NextResponse对象
  */
-export function createSuccessResponse<T>(data?: T, message: string = '操作成功'): NextResponse {
+export function createSuccessResponse<T>(data?: T, message: string = '成功'): NextResponse {
   const response: ApiResponse<T> = {
     success: true,
     code: 200,
@@ -15,7 +15,7 @@ export function createSuccessResponse<T>(data?: T, message: string = '操作成�
     data,
     timestamp: Date.now()
   };
-  
+
   return NextResponse.json(response);
 }
 
@@ -27,8 +27,8 @@ export function createSuccessResponse<T>(data?: T, message: string = '操作成�
  * @returns NextResponse对象
  */
 export function createErrorResponse(
-  code: ErrorCode = ErrorCode.UNKNOWN_ERROR, 
-  message: string = '操作失败',
+  code: ErrorCode = ErrorCode.UNKNOWN_ERROR,
+  message: string = '失败',
   status: number = 400
 ): NextResponse {
   const response: ApiResponse = {
@@ -37,7 +37,7 @@ export function createErrorResponse(
     message,
     timestamp: Date.now()
   };
-  
+
   return NextResponse.json(response, { status });
 }
 

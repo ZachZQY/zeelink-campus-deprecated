@@ -1,7 +1,7 @@
 /**
  * 数据库表对应的TypeScript类型定义
  * 注意：此文件由生成器自动生成，请勿手动修改
- * 生成时间：2025-03-03T13:51:17.041Z
+ * 生成时间：2025-03-04T05:56:03.921Z
  */
 
 // 通用类型定义 - SQL类型映射
@@ -20,6 +20,42 @@ export type ID = BIGSERIAL;
 export type ForeignKey = BIGINT | null;
 
 // 类型定义
+
+/**
+ * 帖子评论表
+ */
+export interface PostComments {
+  /** 内容 */
+  content?: TEXT | null;
+  /** 媒体数据（图片URL等） */
+  media_data?: JSONB | null;
+  /** 唯一标识符 */
+  id?: ID;
+  /** 创建时间 */
+  created_at?: TIMESTAMPTZ;
+  /** 更新时间 */
+  updated_at?: TIMESTAMPTZ;
+
+  // 关联关系
+  /** 外键：关联到 post_comments 表 */
+  post_comment_post_comments?: ForeignKey;
+
+  /** 外键：关联到 posts 表 */
+  post_posts?: ForeignKey;
+
+  /** 外键：关联到 users 表 */
+  author_users?: ForeignKey;
+
+  /** 帖子的回复 */
+  post_comments?: PostComments[];
+  /** 引用自 post_comments 表 */
+  post_comment?: PostComments | null;
+  /** 引用自 posts 表 */
+  post?: Posts | null;
+  /** 引用自 users 表 */
+  author?: Users | null;
+}
+
 
 /**
  * 帖子和话题的关联表
@@ -62,27 +98,87 @@ export interface Posts {
   updated_at?: TIMESTAMPTZ;
 
   // 关联关系
-  /** 外键：关联到 site 表 */
-  site_site?: ForeignKey;
+  /** 外键：关联到 sites 表 */
+  site_sites?: ForeignKey;
 
-  /** 外键：关联到 user 表 */
-  author_user?: ForeignKey;
+  /** 外键：关联到 users 表 */
+  author_users?: ForeignKey;
 
   /** 帖子关联的话题 */
   post_topics?: PostTopics[];
-  /** 引用自 site 表 */
-  site?: Site | null;
-  /** 引用自 user 表 */
-  author?: User | null;
+  /** 贴子下的评论 */
+  post_comments?: PostComments[];
+  /** 引用自 sites 表 */
+  site?: Sites | null;
+  /** 引用自 users 表 */
+  author?: Users | null;
+}
+
+
+/**
+ * 站点轮播图表
+ */
+export interface SiteBanners {
+  /** 轮播图名称 */
+  name?: TEXT | null;
+  /** 轮播图图片 */
+  image_url?: TEXT | null;
+  /** 轮播图跳转链接 */
+  link?: TEXT | null;
+  /** 轮播图排序 */
+  sort?: BIGINT | null;
+  /** 唯一标识符 */
+  id?: ID;
+  /** 创建时间 */
+  created_at?: TIMESTAMPTZ;
+  /** 更新时间 */
+  updated_at?: TIMESTAMPTZ;
+
+  // 关联关系
+  /** 外键：关联到 sites 表 */
+  site_sites?: ForeignKey;
+
+  /** 引用自 sites 表 */
+  site?: Sites | null;
+}
+
+
+/**
+ * 站点快捷链接表
+ */
+export interface SiteQuicklinks {
+  /** 名称 */
+  name?: TEXT | null;
+  /** 图标 */
+  icon_url?: TEXT | null;
+  /** 链接 */
+  link?: TEXT | null;
+  /** 排序 */
+  sort?: BIGINT | null;
+  /** 唯一标识符 */
+  id?: ID;
+  /** 创建时间 */
+  created_at?: TIMESTAMPTZ;
+  /** 更新时间 */
+  updated_at?: TIMESTAMPTZ;
+
+  // 关联关系
+  /** 外键：关联到 sites 表 */
+  site_sites?: ForeignKey;
+
+  /** 引用自 sites 表 */
+  site?: Sites | null;
 }
 
 
 /**
  * 站点信息表
  */
-export interface Site {
+export interface Sites {
   /** 站点名称 */
   name?: TEXT | null;
+  /** 站点图标 */
+  icon_url?: TEXT | null;
   /** 唯一标识符 */
   id?: ID;
   /** 创建时间 */
@@ -94,7 +190,11 @@ export interface Site {
   /** 站点的帖子列表 */
   posts?: Posts[];
   /** 站点的用户列表 */
-  current_users?: User[];
+  current_users?: Users[];
+  /** 站点下的轮播图 */
+  site_banners?: SiteBanners[];
+  /** 站点下的快捷链接 */
+  site_quicklinks?: SiteQuicklinks[];
 }
 
 
@@ -118,9 +218,31 @@ export interface Topics {
 
 
 /**
+ * 用户角色表
+ */
+export interface UserRoles {
+  /** 角色名称：admin｜user */
+  name?: TEXT | null;
+  /** 唯一标识符 */
+  id?: ID;
+  /** 创建时间 */
+  created_at?: TIMESTAMPTZ;
+  /** 更新时间 */
+  updated_at?: TIMESTAMPTZ;
+
+  // 关联关系
+  /** 外键：关联到 users 表 */
+  user_users?: ForeignKey;
+
+  /** 引用自 users 表 */
+  user?: Users | null;
+}
+
+
+/**
  * 用户信息表
  */
-export interface User {
+export interface Users {
   /** 手机号码 */
   mobile?: TEXT | null;
   /** 密码（md5加密存储） */
@@ -139,42 +261,22 @@ export interface User {
   updated_at?: TIMESTAMPTZ;
 
   // 关联关系
-  /** 外键：关联到 site 表 */
-  current_site_site?: ForeignKey;
+  /** 外键：关联到 sites 表 */
+  current_site_sites?: ForeignKey;
 
   /** 用户发布的帖子 */
   posts?: Posts[];
+  /** 用户发布的评论 */
+  post_comments?: PostComments[];
   /** 用户拥有的角色 */
-  roles?: UserRole[];
-  /** 引用自 site 表 */
-  current_site?: Site | null;
-}
-
-
-/**
- * 用户角色表
- */
-export interface UserRole {
-  /** 角色名称：admin｜user */
-  name?: TEXT | null;
-  /** 唯一标识符 */
-  id?: ID;
-  /** 创建时间 */
-  created_at?: TIMESTAMPTZ;
-  /** 更新时间 */
-  updated_at?: TIMESTAMPTZ;
-
-  // 关联关系
-  /** 外键：关联到 user 表 */
-  user_user?: ForeignKey;
-
-  /** 引用自 user 表 */
-  user?: User | null;
+  roles?: UserRoles[];
+  /** 引用自 sites 表 */
+  current_site?: Sites | null;
 }
 
 
 // 导出类型
-export type TableNames = 'post_topics' | 'posts' | 'site' | 'topics' | 'user' | 'user_role';
+export type TableNames = 'post_comments' | 'post_topics' | 'posts' | 'site_banners' | 'site_quicklinks' | 'sites' | 'topics' | 'user_roles' | 'users';
 
 /**
  * 获取指定表的类型
@@ -182,10 +284,13 @@ export type TableNames = 'post_topics' | 'posts' | 'site' | 'topics' | 'user' | 
  * type UserRow = TableType<'user'>;
  */
 export type TableType<T extends TableNames> = 
+  T extends 'post_comments' ? PostComments :
   T extends 'post_topics' ? PostTopics :
   T extends 'posts' ? Posts :
-  T extends 'site' ? Site :
+  T extends 'site_banners' ? SiteBanners :
+  T extends 'site_quicklinks' ? SiteQuicklinks :
+  T extends 'sites' ? Sites :
   T extends 'topics' ? Topics :
-  T extends 'user' ? User :
-  T extends 'user_role' ? UserRole :
+  T extends 'user_roles' ? UserRoles :
+  T extends 'users' ? Users :
   never;

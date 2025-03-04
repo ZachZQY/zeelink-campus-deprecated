@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createSuccessResponse, createErrorResponse, createNotFoundResponse } from '@/lib/utils/response';
 import { ErrorCode } from '@/lib/types/api';
-import { getPostById, updatePost, deletePost } from '@/lib/service/posts';
+import { ezClient } from '@/lib/tools/ezclient';
 
 /**
  * 获取指定帖子信息
@@ -20,7 +20,15 @@ export async function GET(
       );
     }
     
-    const result = await getPostById(postId);
+    const result = await ezClient.queryGetFirstOne({
+      name: 'posts',
+      args: {
+        where: {
+          id: postId
+        }
+      },
+      fields: ['id', 'title', 'content', 'created_at', 'updated_at']
+    })
     
     if (result.success && result.data) {
       return createSuccessResponse(result.data);
@@ -58,17 +66,7 @@ export async function PUT(
     const { id, created_at, updated_at, author_user, site_site, ...updateData } = body;
     const { topics, ...postData } = updateData;
     
-    // 更新帖子
-    const result = await updatePost(postId, postData, topics);
     
-    if (result.success) {
-      return createSuccessResponse(result.data, result.message);
-    } else {
-      return createErrorResponse(
-        ErrorCode.CONTENT_NOT_FOUND,
-        result.message || '帖子更新失败'
-      );
-    }
   } catch (error) {
     console.error('更新帖子信息异常:', error);
     return createErrorResponse(
@@ -95,16 +93,7 @@ export async function DELETE(
       );
     }
     
-    const result = await deletePost(postId);
     
-    if (result.success) {
-      return createSuccessResponse(null, result.message);
-    } else {
-      return createErrorResponse(
-        ErrorCode.CONTENT_NOT_FOUND,
-        result.message || '帖子删除失败'
-      );
-    }
   } catch (error) {
     console.error('删除帖子异常:', error);
     return createErrorResponse(

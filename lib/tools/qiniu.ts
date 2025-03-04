@@ -27,7 +27,7 @@ export function generateKey(filename: string, basePath: string = downloadPathCon
 
 
 // 上传单个文件
-export async function uploadFile(file: File, basePath: string = downloadPathConfig.basePath): Promise<string> {
+export async function uploadFile(file: File, basePath: string = downloadPathConfig.basePath): Promise<{ name?: string, path: string, type: string }> {
     // 生成文件名和上传凭证
     const key = generateKey(file.name, basePath)
     const token = getUploadToken(key)
@@ -52,7 +52,7 @@ export async function uploadFile(file: File, basePath: string = downloadPathConf
             }
 
             if (info.statusCode === 200) {
-                resolve(key)
+                resolve({ name: file.name, path: key, type: file.type })
             } else {
                 reject(new Error(`上传失败: ${info.statusCode}`))
             }

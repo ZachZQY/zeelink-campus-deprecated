@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { uploadSingleFile, uploadMultipleFiles } from '@/lib/service/upload';
+import { uploadSingleFile, uploadMultipleFiles } from '@/lib/services/upload';
 import { createSuccessResponse, createErrorResponse } from '@/lib/utils/response';
 import { ErrorCode } from '@/lib/types/api';
 

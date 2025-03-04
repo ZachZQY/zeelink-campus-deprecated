@@ -13,21 +13,18 @@ export interface ApiResponse<T = any> {
  * 分页请求参数
  */
 export interface PaginationParams {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  orderBy?: string;
+  orderSort?: 'asc' | 'desc';
 }
 
 /**
  * 分页响应数据
  */
 export interface PaginationData<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  datas: T[];
+  aggregate: Record<string, any>;
 }
 
 /**
@@ -39,13 +36,13 @@ export enum ErrorCode {
   INVALID_PARAMS = 1001,
   SERVICE_UNAVAILABLE = 1002,
   RATE_LIMIT_EXCEEDED = 1003,
-  
+
   // 授权相关错误 (2000-2999)
   UNAUTHORIZED = 2000,
   FORBIDDEN = 2001,
   TOKEN_EXPIRED = 2002,
   INVALID_TOKEN = 2003,
-  
+
   // 用户相关错误 (3000-3999)
   USER_NOT_FOUND = 3000,
   INVALID_CREDENTIALS = 3001,
@@ -53,12 +50,12 @@ export enum ErrorCode {
   ACCOUNT_DISABLED = 3003,
   USER_ALREADY_EXISTS = 3004,
   VERIFICATION_CODE_INVALID = 3005,
-  
+
   // 文件上传相关错误 (4000-4999)
   UPLOAD_FAILED = 4000,
   INVALID_FILE_TYPE = 4001,
   FILE_TOO_LARGE = 4002,
-  
+
   // 内容相关错误 (5000-5999)
   CONTENT_NOT_FOUND = 5000,
   DUPLICATE_CONTENT = 5001,
