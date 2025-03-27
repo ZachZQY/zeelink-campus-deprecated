@@ -432,10 +432,7 @@ async function generateTableSQL(): Promise<void> {
     sql += generateForeignKeysSQL(tables);
     sql += generateIndexesSQL(tables);
     sql += await generateTriggersSQL();
-    sql += await generateViewsSQL();
-    // 可以在需要时启用这些函数
-    // sql += generateResetSequencesSQL(tables);
-    // sql += generateInitialDataSQL(tables);
+    // sql += await generateViewsSQL();  // 删除这一行
     sql += generateFooter();
     
     const outputDir = path.join(__dirname, 'outputs');
@@ -456,91 +453,73 @@ function generateCreateTableSQL(tables: TableConfig[]): string {
   let sql = '';
   
   for (const table of tables) {
-    sql += `-- ${table.description || table.tableName}\n`;
+    sql += `\n-- ============================================\n`;
+    sql += `-- Table: ${table.tableName}\n`;
+    sql += `-- Description: ${table.description || table.tableName}\n`;
+    sql += `-- ============================================\n\n`;
+    
     sql += `CREATE TABLE IF NOT EXISTS ${table.tableName} (\n`;
     
-    // 检查用户是否已经定义了id字段
-    const hasIdField = table.fields.some(field => field.name === 'id');
+    const fieldDefinitions: string[] = [];
     
     // 如果用户没有定义id字段，则添加默认的id字段
-    if (!hasIdField) {
-      sql += `  id BIGSERIAL PRIMARY KEY,\n`;
+    if (!table.fields.some(field => field.name === 'id')) {
+      fieldDefinitions.push('  id BIGSERIAL PRIMARY KEY, -- 主键');
     }
     
-    // 添加用户定义的字段
-    const fieldDefinitions = table.fields.map((field: Field) => {
+    // 格式化用户定义的字段
+    table.fields.forEach((field: Field) => {
       let definition = `  ${field.name} ${field.type}`;
+      const constraints: string[] = [];
       
-      if (field.primary) {
-        definition += ' PRIMARY KEY';
+      if (field.primary) constraints.push('PRIMARY KEY');
+      if (field.nullable === false) constraints.push('NOT NULL');
+      if (field.default) constraints.push(`DEFAULT ${field.default}`);
+      if (field.unique) constraints.push('UNIQUE');
+      if (field.check) constraints.push(`CHECK (${field.check})`);
+      
+      if (constraints.length > 0) {
+        definition += ` ${constraints.join(' ')}`;
       }
       
-      if (field.nullable === false) {
-        definition += ' NOT NULL';
+      definition += ',';
+      
+      if (field.description) {
+        definition += ` -- ${field.description}`;
       }
       
-      if (field.default) {
-        definition += ` DEFAULT ${field.default}`;
-      }
-      
-      if (field.unique) {
-        definition += ' UNIQUE';
-      }
-      
-      if (field.check) {
-        definition += ` CHECK (${field.check})`;
-      }
-      
-      definition += ` -- ${field.description || ''}`;
-      
-      return definition;
+      fieldDefinitions.push(definition);
     });
     
-    // 添加用户定义的字段
-    sql += fieldDefinitions.join(',\n');
-    
-    // 检查用户是否已经定义了created_at和updated_at字段
-    const hasCreatedAtField = table.fields.some(field => field.name === 'created_at');
-    const hasUpdatedAtField = table.fields.some(field => field.name === 'updated_at');
-    
-    // 只有在用户没有定义这些字段时才添加
-    if (!hasCreatedAtField || !hasUpdatedAtField) {
-      sql += ',\n';
-      
-      if (!hasCreatedAtField) {
-        sql += '  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()';
-        if (!hasUpdatedAtField) {
-          sql += ',\n';
-        }
-      }
-      
-      if (!hasUpdatedAtField) {
-        sql += '  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()';
-      }
+    // 添加时间戳字段
+    if (!table.fields.some(f => f.name === 'created_at')) {
+      fieldDefinitions.push('  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间');
+    }
+    if (!table.fields.some(f => f.name === 'updated_at')) {
+      fieldDefinitions.push('  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 更新时间');
+    } else {
+      // 确保最后一个字段没有逗号
+      const lastField = fieldDefinitions[fieldDefinitions.length - 1];
+      fieldDefinitions[fieldDefinitions.length - 1] = lastField.replace(',', '');
     }
     
+    sql += fieldDefinitions.join('\n');
     sql += '\n);\n\n';
     
-    sql += `-- 添加表注释\n`;
-    sql += `COMMENT ON TABLE ${table.tableName} IS '${table.description || table.tableName}';\n`;
+    // 添加表和字段注释
+    sql += `-- Table Comments\n`;
+    sql += `COMMENT ON TABLE ${table.tableName} IS '${table.description || table.tableName}';\n\n`;
     
-    // 添加标准字段的注释（只有在用户没有定义这些字段时才添加）
-    sql += `COMMENT ON COLUMN ${table.tableName}.id IS '唯一标识符';\n`;
-    
-    if (!hasCreatedAtField) {
-      sql += `COMMENT ON COLUMN ${table.tableName}.created_at IS '创建时间';\n`;
+    sql += `-- Column Comments\n`;
+    if (!table.fields.some(f => f.name === 'id')) {
+      sql += `COMMENT ON COLUMN ${table.tableName}.id IS '唯一标识符';\n`;
     }
     
-    if (!hasUpdatedAtField) {
-      sql += `COMMENT ON COLUMN ${table.tableName}.updated_at IS '更新时间';\n`;
-    }
-    
-    // 添加用户定义字段的注释
-    for (const field of table.fields) {
+    table.fields.forEach(field => {
       if (field.description) {
         sql += `COMMENT ON COLUMN ${table.tableName}.${field.name} IS '${field.description}';\n`;
       }
-    }
+    });
     
     sql += '\n';
   }
@@ -548,77 +527,81 @@ function generateCreateTableSQL(tables: TableConfig[]): string {
   return sql;
 }
 
-// 生成外键关系SQL
 function generateForeignKeysSQL(tables: TableConfig[]): string {
-  let sql = '';
+  let sql = '\n-- ============================================\n';
+  sql += '-- Foreign Key Constraints\n';
+  sql += '-- ============================================\n\n';
   
   const addedRelations = new Set<string>();
   
   for (const table of tables) {
-    if (!table.relations || table.relations.length === 0) {
-      continue;
-    }
+    if (!table.relations?.length) continue;
+    
+    sql += `-- ${table.tableName} 表的外键关系\n`;
     
     for (const relation of table.relations) {
-      let foreignKeyName: string, sourceTable: string, targetTable: string, foreignKeyColumn: string;
+      let sourceTable: string, targetTable: string, foreignKeyColumn: string;
       
-      if (relation.type === 'MANY_TO_ONE' || relation.type === 'ONE_TO_ONE') {
-        sourceTable = table.tableName;
-        targetTable = relation.targetTable;
-        foreignKeyColumn = `${relation.relationNameInTargetTable}_${targetTable}`;
-        foreignKeyName = `fk_${sourceTable}_${foreignKeyColumn}`;
-      } else if (relation.type === 'ONE_TO_MANY') {
+      if (relation.type === 'ONE_TO_MANY') {
         sourceTable = relation.targetTable;
         targetTable = table.tableName;
-        foreignKeyColumn = `${relation.relationNameInTargetTable}_${targetTable}`;
-        foreignKeyName = `fk_${sourceTable}_${foreignKeyColumn}`;
       } else {
-        continue;
+        sourceTable = table.tableName;
+        targetTable = relation.targetTable;
       }
       
+      foreignKeyColumn = `${relation.relationNameInTargetTable}_${targetTable}`;
       const relationIdentifier = `${sourceTable}_TO_${targetTable}_${foreignKeyColumn}`;
       
-      if (addedRelations.has(relationIdentifier)) {
-        continue; 
-      }
-      
+      if (addedRelations.has(relationIdentifier)) continue;
       addedRelations.add(relationIdentifier);
       
-      sql += `-- 为${sourceTable}表添加外键字段${foreignKeyColumn}，引用${targetTable}表\n`;
-      sql += `ALTER TABLE ${sourceTable} ADD COLUMN IF NOT EXISTS ${foreignKeyColumn} BIGINT;\n`;
-      sql += `COMMENT ON COLUMN ${sourceTable}.${foreignKeyColumn} IS '外键：引用 ${targetTable} 表';\n`;
-      sql += `ALTER TABLE ${sourceTable} ADD CONSTRAINT ${foreignKeyName} FOREIGN KEY (${foreignKeyColumn}) REFERENCES ${targetTable}(id) ON DELETE SET NULL;\n\n`;
+      const constraintName = `fk_${sourceTable}_${targetTable}_${relation.relationNameInTargetTable}`;
+      
+      sql += `\n-- ${relation.description || `${sourceTable} -> ${targetTable} 关系`}\n`;
+      sql += `ALTER TABLE ${sourceTable}\n`;
+      sql += `    ADD COLUMN IF NOT EXISTS ${foreignKeyColumn} BIGINT,\n`;
+      sql += `    ADD CONSTRAINT ${constraintName}\n`;
+      sql += `        FOREIGN KEY (${foreignKeyColumn})\n`;
+      sql += `        REFERENCES ${targetTable}(id)\n`;
+      sql += `        ON DELETE SET NULL;\n\n`;
+      
+      sql += `COMMENT ON COLUMN ${sourceTable}.${foreignKeyColumn}\n`;
+      sql += `    IS '外键：关联到 ${targetTable} 表';\n`;
     }
   }
   
   return sql;
 }
 
-// 生成索引SQL
 function generateIndexesSQL(tables: TableConfig[]): string {
-  let sql = '';
+  let sql = '\n-- ============================================\n';
+  sql += '-- Indexes\n';
+  sql += '-- ============================================\n\n';
   
   tables.forEach(table => {
-    if (!table.indexes || table.indexes.length === 0) return;
+    sql += `-- ${table.tableName} 表索引\n`;
     
-    table.indexes.forEach(index => {
-      const indexName = `idx_${table.tableName}_${index.fields.join('_')}`;
-      
-      sql += `-- 创建${table.tableName}表的${index.unique ? '唯一' : ''}索引 (${index.fields.join(', ')})\n`;
-      sql += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${indexName}\n`;
-      sql += `ON ${table.tableName} (${index.fields.join(', ')})`;
-      
-      if (index.where) {
-        sql += `\nWHERE ${index.where}`;
-      }
-      
-      sql += `;\n\n`;
-    });
-  });
-  
-  // 默认为所有表的updated_at和created_at字段创建索引
-  tables.forEach(table => {
-    // 检查字段是否已被索引
+    // 用户定义的索引
+    if (table.indexes?.length) {
+      table.indexes.forEach(index => {
+        const indexType = index.unique ? 'UNIQUE INDEX' : 'INDEX';
+        const indexName = `idx_${table.tableName}_${index.fields.join('_')}`;
+        
+        sql += `\n-- ${index.fields.join(', ')} 字段的${index.unique ? '唯一' : ''}索引\n`;
+        sql += `CREATE ${indexType} IF NOT EXISTS ${indexName}\n`;
+        sql += `    ON ${table.tableName} (${index.fields.join(', ')})`;
+        
+        if (index.where) {
+          sql += `\n    WHERE ${index.where}`;
+        }
+        
+        sql += `;\n`;
+      });
+      sql += '\n';
+    }
+    
+    // 自动创建的时间戳索引
     const hasUpdatedAtIndex = table.indexes?.some(idx => 
       idx.fields.includes('updated_at') || 
       idx.fields.some(f => f.toLowerCase().includes('updated_at'))
@@ -630,15 +613,15 @@ function generateIndexesSQL(tables: TableConfig[]): string {
     );
     
     if (!hasUpdatedAtIndex) {
-      sql += `-- 为${table.tableName}表的updated_at字段创建索引\n`;
+      sql += `-- updated_at 字段索引\n`;
       sql += `CREATE INDEX IF NOT EXISTS idx_${table.tableName}_updated_at\n`;
-      sql += `ON ${table.tableName} (updated_at);\n\n`;
+      sql += `    ON ${table.tableName} (updated_at);\n\n`;
     }
     
     if (!hasCreatedAtIndex) {
-      sql += `-- 为${table.tableName}表的created_at字段创建索引\n`;
+      sql += `-- created_at 字段索引\n`;
       sql += `CREATE INDEX IF NOT EXISTS idx_${table.tableName}_created_at\n`;
-      sql += `ON ${table.tableName} (created_at);\n\n`;
+      sql += `    ON ${table.tableName} (created_at);\n\n`;
     }
   });
   

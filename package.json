@@ -8,8 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate:sql": "npx tsx dataModel/generate-postgre-sql.ts",
-    "generate:types": "npx tsx dataModel/generate-types.ts",
+    "generate:pg-sql": "npx tsx dataModel/generate-pg-sql.ts",
+    "generate:schema": "npx tsx dataModel/generate-schema.ts",
     "generate": "npm run generate:sql && npm run generate:types"
   },
   "dependencies": {
