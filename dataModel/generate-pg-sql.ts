@@ -443,7 +443,7 @@ async function generateTableSQL(): Promise<void> {
       fs.mkdirSync(outputDir);
     }
     
-    fs.writeFileSync(path.join(outputDir, 'database.sql'), sql);
+    fs.writeFileSync(path.join(outputDir, 'pg.sql'), sql);
     console.log(`SQL生成成功，已写入到 ${path.join(outputDir, 'database.sql')}`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -35,20 +35,20 @@ npm install
 # 使用npm脚本
 npm run generate
 # 或者
-npm run generate:sql
+npm run generate:pg-sql
 
 # 或者直接运行
-node --loader ts-node/esm generate-postgre-sql.ts
+node --loader ts-node/esm generate-pg-sql.ts
 ```
 
-生成的 SQL 文件将保存在 `outputs/database.sql` 中。
+生成的 SQL 文件将保存在 `outputs/pg.sql` 中。
 
 ### 生成 TypeScript 类型
 
 运行以下命令生成与数据表对应的 TypeScript 类型定义：
 
 ```bash
-npm run generate:types
+npm run generate:schema
 # 或使用
 npm run generate (同时生成SQL和类型)
 ```
@@ -107,7 +107,7 @@ SQL类型与TypeScript类型的映射关系如下：
 
 ## 开发说明
 
-如需扩展或修改生成器功能，可以编辑 `generate-postgre-sql.ts` 文件。主要逻辑包括：
+如需扩展或修改生成器功能，可以编辑 `generate-pg-sql.ts` 文件。主要逻辑包括：
 
 - `loadAllTables()`: 加载表定义文件
 - `validateTableDefinitions()`: 校验表定义

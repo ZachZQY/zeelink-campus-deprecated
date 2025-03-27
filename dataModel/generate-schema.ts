@@ -432,12 +432,12 @@ async function generateTypeDefinitions(): Promise<void> {
     const output = generateTypes(tables, reverseRelations);
     
     // 写入文件
-    const outputDir = path.join(__dirname, 'types');
+    const outputDir = path.join(__dirname, 'outputs');
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
     
-    const outputFile = path.join(outputDir, 'index.ts');
+    const outputFile = path.join(outputDir, 'schema.ts');
     fs.writeFileSync(outputFile, output);
     
     console.log(`成功生成类型定义文件：${outputFile}`);
