@@ -1,7 +1,7 @@
 /**
  * 数据库表对应的TypeScript类型定义
  * 注意：此文件由生成器自动生成，请勿手动修改
- * 生成时间：2025-03-27T02:51:07.077Z
+ * 生成时间：2025-03-27T16:07:02.464Z
  */
 
 // 通用类型定义 - SQL类型映射
@@ -14,6 +14,7 @@ export type TIMESTAMPTZ = number | string;
 export type TIMETZ = string;
 export type DECIMAL = string | number;
 export type DATE = string | Date;
+export type BOOLEAN = boolean;
 
 // 业务类型定义
 export type ID = BIGSERIAL;

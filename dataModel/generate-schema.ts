@@ -23,6 +23,7 @@ const ALLOWED_SQL_TYPES = [
   'TIMESTAMPTZ', 
   'DECIMAL', 
   'DATE',
+  'BOOLEAN',
   // 自动字段
   'ID',
   'CREATED_AT',
@@ -39,6 +40,7 @@ const SQL_TYPE_MAPPINGS: { [key: string]: string } = {
   'TIMESTAMPTZ': 'TIMESTAMPTZ',
   'DECIMAL': 'DECIMAL',
   'DATE': 'DATE',
+  'BOOLEAN': 'BOOLEAN',
   // 特殊类型
   'ID': 'ID',
   'CREATED_AT': 'TIMESTAMPTZ',
@@ -265,7 +267,8 @@ export function generateTypes(tables: TableConfig[], reverseRelations: Map<strin
   output += 'export type TIMESTAMPTZ = number | string;\n';
   output += 'export type TIMETZ = string;\n';
   output += 'export type DECIMAL = string | number;\n';
-  output += 'export type DATE = string | Date;\n\n';
+  output += 'export type DATE = string | Date;\n';
+  output += 'export type BOOLEAN = boolean;\n\n';
   
   output += '// 业务类型定义\n';
   output += 'export type ID = BIGSERIAL;\n';

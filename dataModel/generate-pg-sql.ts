@@ -90,6 +90,7 @@ const validFieldTypes = [
   'TIMESTAMPTZ', 
   'DECIMAL', 
   'DATE',
+  'BOOLEAN',
   // 特殊自动字段
   'ID',
   'CREATED_AT',

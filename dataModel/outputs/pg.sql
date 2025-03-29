@@ -1,6 +1,6 @@
 -- ======================================
 -- 数据库结构SQL脚本
--- 生成时间: 2025-03-27T02:51:41.782Z
+-- 生成时间: 2025-03-27T14:27:03.613Z
 -- 生成工具: ZCM自动生成
 -- 注意: 此文件是自动生成的，请勿手动修改
 -- ======================================
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS site_quicklinks (
   name TEXT, -- 名称
   icon_url TEXT, -- 图标
   link TEXT, -- 链接
-  sort BIGINT, -- 排序
+  sort BOOLEAN, -- 排序
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- 更新时间
 );
